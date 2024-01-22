@@ -5,19 +5,21 @@ const messageRouter = Router();
 
 messageRouter.get('/', async (req, res) => {
   const messages = await fileDb.getItems();
-  const limitedMessages = messages.slice(-30);
-  res.send(limitedMessages);
-});
 
-messageRouter.get('/:id', async (req, res) => {
-  const messages = await fileDb.getItems();
-  const message = messages.find(p => p.id === req.params.id);
+  const queryDate = req.query.datetime as string;
 
-  if (!message) {
-    res.send('Not found!');
+  if (queryDate) {
+    const date = new Date(queryDate);
+    if (isNaN(date.getDate())) {
+      return res.status(400).send({error: 'Неверный формат даты!1'});
+    }
+
+    const filteredMessages = messages.filter(message => new Date(message.datetime) > date);
+    res.send(filteredMessages);
+  } else {
+    const limitedMessages = messages.slice(-30);
+    res.send(limitedMessages);
   }
-
-  res.send(message);
 });
 
 messageRouter.post('/', async (req, res, next) => {
